@@ -45,6 +45,6 @@ jobs:
 
       # Official gosec pipeline compilation scanner action module
       - name: Run Gosec Security SAST Scan
-        uses: securego/gosec@v2
+        uses: securego/gosec@master
         with:
           args: ./backend/...
