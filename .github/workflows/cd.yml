@@ -2,14 +2,14 @@ name: CD
 
 on:
   workflow_call:
-  #workflow_run:
-   # workflows: ["CI"]
-   # types: [completed]
-   # branches: [main]
+
+env:
+  CLUSTER: skillpulse
+  NAMESPACE: skillpulse
 
 jobs:
   deploy:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && vars.DEPLOY_ENABLED == 'true' }}
+    if: ${{ vars.DEPLOY_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: appleboy/ssh-action@v1
@@ -17,7 +17,36 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          envs: CLUSTER,NAMESPACE
           script: |
+            set -e # Exit immediately if any command fails
+            echo "Install required package"
+            sudo apt update -y
+            sudo apt install docker.io -y
+            sudo apt install docker-compose-v2 -y
+            sudo usermod -aG docker $USER && newgrp docker
+
+            # Ensure kubectl is installed on the target machine
+            if ! command -v kubectl &> /dev/null; then
+              echo "Installing kubectl..."
+              sudo apt install -y apt-transport-https ca-certificates curl gpg
+              sudo mkdir -p /etc/apt/keyrings
+              sudo curl -fsSL https://k8s.io | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-archive-keyring.gpg
+              echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-archive-keyring.gpg] https://k8s.io /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+              sudo apt update -y
+              sudo apt install -y kubectl
+            fi
+
+            # ensure kind is installed
+            if ! command -v kind &> /dev/null; then
+              echo "Downloading and installing Kind..."
+              [ $(uname -m) = x86_64 ] && ARCH=amd64 || ARCH=arm64
+              curl -Lo ./kind https://k8s.io{ARCH}
+              chmod +x ./kind
+              sudo mv ./kind /usr/local/bin/kind
+            fi
+
+            # Fetch updated manifests
             if [ ! -d ~/github-actions-kubernetes-masterclass ]; then
               git clone ${{ github.server_url }}/${{ github.repository }}.git ~/github-actions-kubernetes-masterclass
             fi
@@ -27,7 +56,18 @@ jobs:
               echo "ERROR: ~/github-actions-kubernetes-masterclass/.env is missing. Create it once with DOCKERHUB_USERNAME and DB credentials."
               exit 1
             fi
-            docker compose pull
-            docker compose up -d
-            docker image prune -f
+            
+            # Create a cluster ' if none exist
+            if ! kind get clusters | grep -q "^kind$"; then
+              echo "No active Kind cluster found. Creating one..."
+              kind create cluster --config k8s/kind-config.yaml --name "${CLUSTER}"
+            fi
 
+            # Deploying to Kind Cluster
+            echo "==== 5. Deploying to Cluster ===="
+            kubectl apply -f k8s/
+
+            echo "==== 6. Verifying Service Rollouts ===="
+            kubectl rollout status statefulset/mysql    -n "${NAMESPACE}" --timeout=180s
+            kubectl rollout status deployment/backend   -n "${NAMESPACE}" --timeout=120s
+            kubectl rollout status deployment/frontend  -n "${NAMESPACE}" --timeout=60s

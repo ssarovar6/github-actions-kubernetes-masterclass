@@ -1,0 +1,22 @@
+name: Pipeline
+on:
+  workflow_dispatch:
+  
+jobs:
+  code-scan:
+    uses: ./.github/workflows/code-scan.yml
+  secret-scan:
+    uses: ./.github/workflows/secret-scan.yml
+    secrets: inherit
+  build-job:
+    needs: [code-scan, secret-scan]
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit
+  update-k8s-maifests:
+    needs: [build-job]
+    uses: ./.github/workflows/cd-k8s.yml
+    secrets: inherit
+  deploy-job:
+    needs: [update-k8s-maifests]
+    uses: ./.github/workflows/cd.yml
+    secrets: inherit

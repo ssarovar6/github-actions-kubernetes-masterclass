@@ -2,14 +2,10 @@ name: CD (kind cluster — manifest bump)
 
 on:
   workflow_call:
-  #workflow_run:
-   # workflows: ["CI"]
-   # types: [completed]
-   # branches: [main]
 
 jobs:
   bump-manifests:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && vars.DEPLOY_ENABLED == 'true' }}
+    if: ${{ vars.DEPLOY_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -20,7 +16,7 @@ jobs:
 
       - name: Pin backend + frontend images to commit SHA
         env:
-          SHA: ${{ github.event.workflow_run.head_sha }}
+          SHA: ${{ github.sha }}
           DOCKER_USER: ${{ secrets.DOCKERHUB_USERNAME }}
         run: |
           if [ -z "$DOCKER_USER" ]; then
@@ -32,7 +28,7 @@ jobs:
 
       - name: Commit + push if changed
         env:
-          SHA: ${{ github.event.workflow_run.head_sha }}
+          SHA: ${{ github.sha }}
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
