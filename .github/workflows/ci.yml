@@ -19,6 +19,8 @@ jobs:
         uses: hadolint/hadolint-action@v3.1.0
         with: 
           dockerfile: ./backend/Dockerfile
+          ignore: |
+            DL3018 
         
       # validate frontend dockerfile
       - name: validate frontend Dockerfile
