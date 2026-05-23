@@ -1,3 +1,7 @@
+# Tells golangci-lint v2 exactly which configuration version format to expect
+version: "2"
+
+# To bypass db errcheck error
 linters:
   disable:
   - errcheck
