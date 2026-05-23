@@ -37,13 +37,11 @@ jobs:
 
         # dependency scan
       - name: Run Go Vulnerability Check (govulncheck)
-        uses: golang/govulncheck-action@v1
         run: |
           go mod download
           go mod tidy
           go run golang.org/x/vuln/cmd/govulncheck@latest ./...
-        working-directory: ./backend 
-          
+        working-directory: ./backend
 
       # Official gosec pipeline compilation scanner action module
       - name: Run Gosec Security SAST Scan
