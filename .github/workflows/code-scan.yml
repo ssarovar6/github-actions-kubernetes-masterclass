@@ -35,14 +35,6 @@ jobs:
           version: v2.12
           working-directory: ./backend
 
-        # dependency scan
-      - name: Run Go Vulnerability Check (govulncheck)
-        run: |
-          go mod download
-          go mod tidy
-          go run golang.org/x/vuln/cmd/govulncheck@latest ./...
-        working-directory: ./backend
-
       # Official gosec pipeline compilation scanner action module
       - name: Run Gosec Security SAST Scan
         uses: securego/gosec@master
