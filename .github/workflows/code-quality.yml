@@ -23,7 +23,7 @@ jobs:
 
       # Official, high-performance golangci-lint runner wrapper
       - name: Execute GolangCI-Lint
-        uses: golangci-lint/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v6
         with:
           version: v1.61
           working-directory: ./backend
