@@ -42,7 +42,7 @@ jobs:
             if ! command -v kind &> /dev/null; then
               echo "Downloading and installing Kind..."
               [ $(uname -m) = x86_64 ] && ARCH=amd64 || ARCH=arm64
-              curl -Lo ./kind https://k8s.io{ARCH}
+              curl -fsSL -o ./kind "https://k8s.io{ARCH}"
               chmod +x ./kind
               sudo mv ./kind /usr/local/bin/kind
               kind version
