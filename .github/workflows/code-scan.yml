@@ -41,9 +41,10 @@ jobs:
         with:
           go-version: '1.26'
           work-dir: './backend'
+          go-package: './...' 
 
       # Official gosec pipeline compilation scanner action module
       - name: Run Gosec Security SAST Scan
-        uses: securego/gosec@master
+        uses: securego/gosec@v2
         with:
           args: ./backend/...
