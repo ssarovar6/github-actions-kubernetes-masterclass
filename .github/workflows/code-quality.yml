@@ -21,6 +21,13 @@ jobs:
         with:
           go-version: '1.26' 
 
+      # Synchronize dependency maps inside the runner environment  
+      - name: Install Missing Dependencies
+        run: |
+          go mod download
+          go mod tidy
+        working-directory: ./backend
+
       # Official, high-performance golangci-lint runner wrapper
       - name: Execute GolangCI-Lint
         uses: golangci/golangci-lint-action@v7
