@@ -28,13 +28,16 @@ jobs:
 
             # Ensure kubectl is installed on the target machine
             if ! command -v kubectl &> /dev/null; then
-              echo "Installing kubectl..."
-              sudo apt install -y apt-transport-https ca-certificates curl gpg
-              sudo mkdir -p /etc/apt/keyrings
-              sudo curl -fsSL https://k8s.io | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-archive-keyring.gpg
-              echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-archive-keyring.gpg] https://k8s.io /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
-              sudo apt update -y
-              sudo apt install -y kubectl
+              echo "Installing kubectl binary..."
+              # Download the stable v1.31 native binary package directly
+              curl -LO "https://k8s.io"
+              
+              # Validate executable flags and apply ownership privileges
+              chmod +x ./kubectl
+              sudo mv ./kubectl /usr/local/bin/kubectl
+              
+              # Fast execution smoke-test sanity validation check
+              kubectl version --client
             fi
 
             # ensure kind is installed
