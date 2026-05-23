@@ -1,0 +1,35 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'k8s/**'
+      - 'terraform/**'
+      - 'docs/**'
+      - '**/*.md'
+
+jobs:
+  code-quality-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Go Environment
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22' 
+
+      # Official, high-performance golangci-lint runner wrapper
+      - name: Execute GolangCI-Lint
+        uses: golangci-lint/golangci-lint-action@v6
+        with:
+          version: v1.61
+          working-directory: ./backend
+
+      # Official gosec pipeline compilation scanner action module
+      - name: Run Gosec Security SAST Scan
+        uses: securego/gosec@@master
+        with:
+          args: ./backend/...
