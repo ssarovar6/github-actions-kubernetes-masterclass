@@ -1,13 +1,7 @@
 name: Code & dependency Scan
 
 on:
-  push:
-    branches: [main]
-    paths-ignore:
-      - 'k8s/**'
-      - 'terraform/**'
-      - 'docs/**'
-      - '**/*.md'
+  workflow_call:
 
 jobs:
   code-quality-gate:
