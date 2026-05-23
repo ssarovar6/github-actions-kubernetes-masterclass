@@ -1,7 +1,13 @@
-name: Code Quality
+name: Code & dependency Scan
 
 on:
-  workflow_call:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'k8s/**'
+      - 'terraform/**'
+      - 'docs/**'
+      - '**/*.md'
 
 jobs:
   code-quality-gate:
@@ -28,6 +34,13 @@ jobs:
         with:
           version: v2.12
           working-directory: ./backend
+
+        # dependency scan
+      - name: Run Go Vulnerability Check (govulncheck)
+        uses: golang/govulncheck-action@v1
+        with:
+          go-version: '1.26'
+          working-directory: ./backend 
 
       # Official gosec pipeline compilation scanner action module
       - name: Run Gosec Security SAST Scan
