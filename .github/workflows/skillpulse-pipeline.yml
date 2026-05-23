@@ -1,6 +1,7 @@
 name: Pipeline
 on:
   workflow_dispatch:
+
   
 jobs:
   code-scan:
@@ -12,11 +13,13 @@ jobs:
     needs: [code-scan, secret-scan]
     uses: ./.github/workflows/ci.yml
     secrets: inherit
-  update-k8s-maifests:
+  deploy-gitops-job:
     needs: [build-job]
     uses: ./.github/workflows/cd-k8s.yml
     secrets: inherit
+    permissions:
+      contents: write
   deploy-job:
-    needs: [update-k8s-maifests]
+    needs: [deploy-gitops-job]
     uses: ./.github/workflows/cd.yml
     secrets: inherit
