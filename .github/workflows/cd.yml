@@ -28,15 +28,13 @@ jobs:
 
             # Ensure kubectl is installed on the target machine
             if ! command -v kubectl &> /dev/null; then
-              echo "Installing kubectl binary..."
-              # Download the stable v1.31 native binary package directly
-              curl -LO "https://k8s.io"
-              
-              # Validate executable flags and apply ownership privileges
-              chmod +x ./kubectl
-              sudo mv ./kubectl /usr/local/bin/kubectl
-              
-              # Fast execution smoke-test sanity validation check
+              echo "Installing kubectl binary directly..."
+              curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+              curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl.sha256"
+              echo "$(cat kubectl.sha256)  kubectl" | sha256sum --check
+              sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+              # Clean up temporary verification files to keep the workspace immaculate
+              rm -f kubectl kubectl.sha256
               kubectl version --client
             fi
 
@@ -47,6 +45,7 @@ jobs:
               curl -Lo ./kind https://k8s.io{ARCH}
               chmod +x ./kind
               sudo mv ./kind /usr/local/bin/kind
+              kind version
             fi
 
             # Fetch updated manifests
