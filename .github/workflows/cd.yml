@@ -6,6 +6,13 @@ on:
 env:
   CLUSTER: skillpulse
   NAMESPACE: skillpulse
+  DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+  MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+  DB_HOST: ${{ secrets.DB_HOST }}
+  DB_PORT: ${{ secrets.DB_PORT }}
+  DB_USER: ${{ secrets.DB_USER }}
+  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+  DB_NAME: ${{ secrets.DB_NAME }}
 
 jobs:
   deploy:
@@ -17,7 +24,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          envs: CLUSTER,NAMESPACE
+          envs: CLUSTER,NAMESPACE,DOCKERHUB_USERNAME,MYSQL_ROOT_PASSWORD,DB_PASSWORD,DB_HOST,DB_PORT,DB_USER,DB_NAME
           script: |
             set -e # Exit immediately if any command fails
             echo "Install required package"
@@ -55,24 +62,22 @@ jobs:
             cd ~/github-actions-kubernetes-masterclass
             git pull origin main
 
-            # AUTOMATICALLY GENERATE THE .ENV FILE
-            cat << EOF > .env
-            DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
-            MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
-            DB_HOST=${{ secrets.DB_HOST }}
-            DB_PORT=${{ secrets.DB_PORT }}
-            DB_USER=${{ secrets.DB_USER }}
-            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            DB_NAME=${{ secrets.DB_NAME }}
-            EOF     
-                   
+            # GENERATE THE .ENV FILE
+            echo "MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD" > .env
+            echo "DB_HOST=$MDB_HOST" >> .env
+            echo "DB_PORT=$DB_PORT" >> .env
+            echo "DB_USER=$DB_USER" >> .env 
+            echo "DB_PASSWORD=$DB_PASSWORD" >> .env 
+            echo "DB_NAME=$DB_NAME" >> .env 
+            echo "DOCKERHUB_USERNAME=$DOCKERHUB_USERNAME" >> .env 
+
             if [ ! -f .env ]; then
               echo "ERROR: ~/github-actions-kubernetes-masterclass/.env is missing. Create it once with DOCKERHUB_USERNAME and DB credentials."
               exit 1
             fi
             
             # Create a cluster ' if none exist
-            if ! kind get clusters | grep -q "^kind$"; then
+            if ! kind get clusters | grep -q "^${CLUSTER}$"; then
               echo "No active Kind cluster found. Creating one..."
               kind create cluster --config k8s/kind-config.yaml --name "${CLUSTER}"
             fi
