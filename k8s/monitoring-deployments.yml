@@ -200,6 +200,8 @@ spec:
       labels:
         app: grafana
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: skillpulse-control-plane
       containers:
         - name: grafana
           image: grafana/grafana:10.0.0

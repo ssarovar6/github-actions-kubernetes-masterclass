@@ -2,9 +2,13 @@ receivers:
   otlp:
     protocols:
       grpc:
-        endpoint: 0.0.0.0:4317
+        endpoint: "0.0.0.0:4317"
       http:
-        endpoint: 0.0.0.0:4318
+        endpoint: "0.0.0.0:4318"
+  mysql:
+    endpoint: "mysql.skillpulse.svc.cluster.local:3306" 
+    username: "root"
+    password: "rootpassword123" 
 
 processors:
   batch:
@@ -18,14 +22,10 @@ exporters:
 service:
   pipelines:
     metrics:
-      receivers: [otlp]
+      receivers: [otlp, mysql]
       processors: [batch]
-      exporters: [prometheus]
+      exporters: [prometheus, logging]
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [debug]
-    logs:
-      receivers: [otlp]
-      processors: [batch]
-      exporters: [debug]
+      exporters: [logging]
