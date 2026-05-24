@@ -1,0 +1,9 @@
+name: Pipeline
+on:
+  workflow_dispatch:
+
+  
+jobs:
+  Infra:
+    uses: ./.github/workflows/infrastructure-as-code.yml
+  

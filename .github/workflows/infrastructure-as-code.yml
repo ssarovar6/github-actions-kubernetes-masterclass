@@ -1,0 +1,94 @@
+name: 'Terraform CI/CD'
+
+on:
+  workflow_call:
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./terraform # Path to your terraform folder
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Create SSH Public Key File
+        run: |
+          echo "${{ secrets.SSH_PUBLIC_KEY }}" > ./terraform/terra-key.pub
+
+      # Step 1 & 2: Version Verification
+      - name: Check CLI Versions
+        run: |
+          echo "=== Checking Installed Versions ==="
+          aws --version
+          terraform --version
+
+      # Step 3: Pre-flight Permission & Credential Check
+      - name: Verify AWS Credentials & Permissions
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: "eu-west-1" # Replace with your target region
+        run: |
+          echo "=== Validating AWS Access ==="
+          
+          # Check if secret variables are empty in GitHub Environment
+          if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
+            echo "❌ ERROR: AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY is missing from GitHub Secrets!"
+            exit 1
+          fi
+          
+          # Make a live API call to verify the keys are valid and have permissions
+          if ! aws sts get-caller-identity; then
+            echo "❌ ERROR: Invalid AWS credentials or insufficient permissions!"
+            exit 1
+          fi
+          echo "✅ AWS Credentials verified successfully."
+
+      # Step 4: Terraform Initialization
+      - name: Terraform Init
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          echo "=== Initializing Terraform ==="
+          if ! terraform init; then
+            echo "❌ ERROR: Terraform init failed!"
+            exit 1
+          fi
+
+      # Step 5: Terraform Validation
+      - name: Terraform Validate
+        run: |
+          echo "=== Validating Configuration ==="
+          if ! terraform validate; then
+            echo "❌ ERROR: Terraform validation failed!"
+            exit 1
+          fi
+
+      # Step 6: Terraform Plan
+      - name: Terraform Plan
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          echo "=== Generating Execution Plan ==="
+          if ! terraform plan -input=false; then
+            echo "❌ ERROR: Terraform plan failed!"
+            exit 1
+          fi
+
+      # Step 7: Terraform Apply (Executes ONLY on Main Branch Push)
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          echo "=== Applying Infrastructure Changes ==="
+          if ! terraform apply -auto-approve -input=false; then
+            echo "❌ ERROR: Terraform apply failed!"
+            exit 1
+          fi
