@@ -22,7 +22,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.5.7"
+          terraform_version: "1.15.4"
 
       # Step 1 & 2: Version Verification
       - name: Check CLI Versions
@@ -39,6 +39,8 @@ jobs:
           AWS_DEFAULT_REGION: "eu-west-1" # Replace with your target region
         run: |
           echo "=== Validating AWS Access ==="
+          echo "Access Key Length: ${#AWS_ACCESS_KEY_ID}"
+          echo "Secret Key Length: ${#AWS_SECRET_ACCESS_KEY}"
           
           # Check if secret variables are empty in GitHub Environment
           if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
