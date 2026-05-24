@@ -16,7 +16,7 @@ jobs:
 
       - name: Create SSH Public Key File
         run: |
-          touch terra-key.pub
+          mkdir -p ./terraform
           echo "${{ secrets.SSH_PUBLIC_KEY }}" > ./terraform/terra-key.pub
 
       # Step 1 & 2: Version Verification
