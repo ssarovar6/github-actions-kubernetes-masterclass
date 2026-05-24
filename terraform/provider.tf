@@ -26,4 +26,12 @@ terraform {
             version = "6.38.0"
         }
     }
+
+    backend "s3" {
+      bucket = "skillpulse-bucket-state"
+      dynamodb_table = "skillpulse-table-state"
+      key = "terraform.tfstate"
+      region = "eu-west-1"
+    }
 }
+
