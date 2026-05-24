@@ -177,11 +177,10 @@ metadata:
   name: grafana
   namespace: skillpulse
 spec:
-  type: NodePort # Allows you to access Grafana from outside the cluster on your EC2 instance IP
+  type: ClusterIP
   ports:
     - port: 3000
       targetPort: 3000
-      nodePort: 32000 # Access via http://<YOUR-EC2-PUBLIC-IP>:32000
   selector:
     app: grafana
 ---
@@ -200,8 +199,6 @@ spec:
       labels:
         app: grafana
     spec:
-      nodeSelector:
-        kubernetes.io/hostname: skillpulse-control-plane
       containers:
         - name: grafana
           image: grafana/grafana:10.0.0
