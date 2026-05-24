@@ -82,9 +82,25 @@ jobs:
               kind create cluster --config k8s/kind-config.yaml --name "${CLUSTER}"
             fi
 
+            # cretae namespace 
+            kubectl apply -f k8s/00-namespace.yaml
+
+            # Deploy observability stack
+            # Convert your raw files into Kubernetes ConfigMaps
+            kubectl create configmap prometheus-config --from-file=monitoring/prometheus.yml --from-file=monitoring/alert-rules.yml -n "${NAMESPACE}" --dry-run=client -o yaml | kubectl apply -f -
+            kubectl create configmap loki-config --from-file=monitoring/loki/loki-config.yml -n "${NAMESPACE}" --dry-run=client -o yaml | kubectl apply -f -
+            kubectl create configmap promtail-config --from-file=monitoring/promtail/promtail-config.yml -n "${NAMESPACE}" --dry-run=client -o yaml | kubectl apply -f -
+            kubectl create configmap otel-config --from-file=monitoring/otel-collector/otel-collector-config.yml -n "${NAMESPACE}" --dry-run=client -o yaml | kubectl apply -f -
+          
+            # Grafana Provisioning ConfigMaps
+            kubectl create configmap grafana-datasources --from-file=monitoring/grafana/provisioning/datasources/datasources.yml -n "${NAMESPACE}" --dry-run=client -o yaml | kubectl apply -f -
+            kubectl create configmap grafana-dashboards --from-file=monitoring/grafana/provisioning/dashboards/dashboards.yml -n "${NAMESPACE}" --dry-run=client -o yaml | kubectl apply -f -
+
+            # Apply your Pod deployment manifests
+            kubectl apply -f k8s/monitoring-deployments.yaml -n "${NAMESPACE}"
+
             # Deploying to Kind Cluster
             echo "==== 5. Deploying to Cluster ===="
-            kubectl apply -f k8s/00-namespace.yaml
             kubectl apply -f k8s/10-mysql.yaml
             kubectl apply -f k8s/20-backend.yaml
             kubectl apply -f k8s/30-frontend.yaml
@@ -93,3 +109,10 @@ jobs:
             kubectl rollout status statefulset/mysql    -n "${NAMESPACE}" --timeout=180s
             kubectl rollout status deployment/backend   -n "${NAMESPACE}" --timeout=120s
             kubectl rollout status deployment/frontend  -n "${NAMESPACE}" --timeout=60s
+            
+            # Open below Links to open WEB APP and Grafana Dashboard
+            echo "===================================================================="
+            echo " DEPLOYMENT SUCCESSFUL!"
+            echo "Open URL http://<Instance-IP>:8888 to access your application"
+            echo "Open URL http://<Instance-IP>:32000 to access the Grafana dashboard"
+            echo "===================================================================="

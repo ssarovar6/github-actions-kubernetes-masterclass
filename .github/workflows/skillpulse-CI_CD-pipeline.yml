@@ -19,7 +19,7 @@ jobs:
     secrets: inherit
     permissions:
       contents: write
-  deploy-job:
+  deploy-app-job:
     needs: [deploy-gitops-job]
     uses: ./.github/workflows/cd.yml
     secrets: inherit

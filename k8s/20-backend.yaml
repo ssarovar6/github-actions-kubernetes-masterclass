@@ -29,6 +29,10 @@ spec:
     metadata:
       labels:
         app: backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics" # Ensure your app code exposes metrics on this path
+        prometheus.io/port: "8080"
     spec:
       containers:
         - name: backend
@@ -38,6 +42,10 @@ spec:
             - name: http
               containerPort: 8080
           env:
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://otel-collector:4318"
+            - name: OTEL_SERVICE_NAME
+              value: "backend-service"
             - name: DB_HOST
               value: mysql
             - name: DB_PORT

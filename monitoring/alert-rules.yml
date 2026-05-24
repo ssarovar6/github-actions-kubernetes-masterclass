@@ -1,0 +1,56 @@
+groups:
+  - name: application-alerts
+    rules:
+      - alert: PodFrequentlyRestarting
+        expr: rate(kube_pod_container_status_restarts_total[5m]) * 60 > 2
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Pod {{ $labels.pod }} is restarting frequently"
+          description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} has restarted more than twice in the last 5 minutes."
+
+      - alert: ContainerCpuUsageHigh
+        expr: (sum(rate(container_cpu_usage_seconds_total{container!=""}[5m])) by (pod, namespace) / sum(kube_pod_container_resource_limits{resource="cpu"}) by (pod, namespace)) * 100 > 80
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on pod {{ $labels.pod }}"
+          description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} has consumed over 80% of its CPU limit for more than 2 minutes. Current value: {{ $value | printf \"%.2f\" }}%"
+
+      - alert: ContainerMemoryUsageHigh
+        expr: (sum(container_memory_working_set_bytes{container!=""}) by (pod, namespace) / sum(kube_pod_container_resource_limits{resource="memory"}) by (pod, namespace)) * 100 > 85
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Memory usage on pod {{ $labels.pod }}"
+          description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is using more than 85% of its allocated memory limit. Current value: {{ $value | printf \"%.2f\" }}%"
+
+      - alert: ContainerMissing
+        expr: absent(container_last_seen{container!=""}) == 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Container tracking has been lost"
+          description: "Prometheus has not seen any active containers reporting metrics for over 1 minute."
+
+      - alert: ScrapeTargetDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Scrape target {{ $labels.instance }} is down"
+          description: "Prometheus job '{{ $labels.job }}' failed to scrape the endpoint {{ $labels.instance }} for more than 1 minute."
+
+      - alert: OutOfDiskSpace
+        expr: (node_filesystem_free_bytes{mountpoint="/"}/node_filesystem_size_bytes{mountpoint="/"}) * 100 < 15
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Disk space is running low on {{ $labels.instance }}"
+          description: "The root partition mountpoint on node {{ $labels.instance }} has less than 15% free space remaining. Current free space percentage: {{ $value | printf \"%.2f\" }}%"
