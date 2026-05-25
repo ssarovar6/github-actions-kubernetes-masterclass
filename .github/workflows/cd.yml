@@ -124,7 +124,7 @@ jobs:
               echo "Checking cluster state (Attempt $i/24)..."
               
               # Fetch pods that are not Running or Completed
-              BAD_PODS=$(kubectl get pods -n "${NAMESPACE}" --no-headers | grep -v -E "Running|Completed" | grep -E "CrashLoopBackOff|Error|ImagePullBackOff|OOMKilled|Pending|ErrImagePull|CreateContainerConfigError|CreateContainerError|FailedMountVolume|FailedScheduling" || true)
+              BAD_PODS=$(kubectl get pods -n "${NAMESPACE}" --no-headers | grep -v -E "Running|Completed" | grep -v "Terminating" | grep -E "CrashLoopBackOff|Error|ImagePullBackOff|OOMKilled|Pending|ErrImagePull|CreateContainerConfigError|CreateContainerError|FailedMountVolume|FailedScheduling" || true)
               
               # Identify explicitly failing lifecycle errors
               CRITICAL_ERRORS=$(echo "$BAD_PODS" | grep -E "CrashLoopBackOff|Error|ImagePullBackOff|OOMKilled|Pending|ErrImagePull|CreateContainerConfigError|CreateContainerError|FailedMountVolume|FailedScheduling" || true)
