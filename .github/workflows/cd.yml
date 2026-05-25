@@ -13,6 +13,7 @@ env:
   DB_USER: ${{ secrets.DB_USER }}
   DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
   DB_NAME: ${{ secrets.DB_NAME }}
+  EC2_HOST: ${{ secrets.EC2_HOST }}
 
 jobs:
   deploy:
@@ -114,6 +115,7 @@ jobs:
             # Open below Links to open WEB APP and Grafana Dashboard
             echo "===================================================================="
             echo " DEPLOYMENT SUCCESSFUL!"
-            echo "Open URL http://<Instance-IP>:8888 to access your application"
-            echo "Open URL http://<Instance-IP>:32000 to access the Grafana dashboard"
+            echo "Open URL http://${{ secrets.EC2_HOST }}:8888 to access your application"
+            echo "Open URL http://${{ secrets.EC2_HOST }}:3000 to access the Grafana dashboard"
+            echo "Open URL http://${{ secrets.EC2_HOST }}:9090 to access the prometheus dashboard"
             echo "===================================================================="
