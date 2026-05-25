@@ -29,18 +29,10 @@ spec:
     metadata:
       labels:
         app: backend
-      annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/path: "/actuator/prometheus" 
-        prometheus.io/port: "8080"
     spec:
       containers:
         - name: backend
-<<<<<<< Updated upstream
-          image: ssarovar6/skillpulse-backend:9b6ff9423c2893a6f9c9fbd88e7e8901b9a0f22f
-=======
-          image: ssarovar6/skillpulse-backend:74095889f81541406bf506de22bf8730b46de03b
->>>>>>> Stashed changes
+          image: ssarovar6/skillpulse-backend:latest
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
