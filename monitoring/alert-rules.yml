@@ -1,12 +1,4 @@
-
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: alert-rules
-  namespace: skillpulse
-data:
-  alert-rules.yml: |
-    groups:
+groups:
       - name: application-alerts
         rules:
           - alert: PodFrequentlyRestarting
