@@ -115,6 +115,45 @@ jobs:
             kubectl rollout restart deployment prometheus -n skillpulse
             kubectl rollout restart deployment otel-collector -n skillpulse
             kubectl rollout restart daemonset promtail -n skillpulse
+
+            echo "==== 7. Continuous Pod State Auditing ===="
+            # Temporarily turn off 'set -e' so the loop handles the exit code errors manually
+            set +e 
+            
+            for i in {1..12}; do
+              echo "Checking cluster state (Attempt $i/24)..."
+              
+              # Fetch pods that are not Running or Completed
+              BAD_PODS=$(kubectl get pods -n "${NAMESPACE}" --no-headers | grep -v -E "Running|Completed" || true)
+              
+              # Identify explicitly failing lifecycle errors
+              CRITICAL_ERRORS=$(echo "$BAD_PODS" | grep -E "CrashLoopBackOff|Error|ImagePullBackOff|OOMKilled|Pending|ErrImagePull|CreateContainerConfigError|CreateContainerError|FailedMountVolume|FailedScheduling" || true)
+              
+              if [ ! -z "$CRITICAL_ERRORS" ]; then
+                echo "❌ TARGET ENVIRONMENT LIFECYCLE DEPLOYMENT FAILURE DETECTED!"
+                echo "$CRITICAL_ERRORS"
+                echo "Displaying failing pod logs for tracing details:"
+                FAILING_POD_NAME=$(echo "$CRITICAL_ERRORS" | awk '{print $1}' | head -n 1)
+                kubectl logs "$FAILING_POD_NAME" -n "${NAMESPACE}" --tail=50
+                exit 1
+              fi
+              
+              if [ -z "$BAD_PODS" ]; then
+                echo "✅ Success: All namespace pods stabilized into clean execution states!"
+                break
+              fi
+              
+              # If pods are just transitioning (ContainerCreating/Pending), wait and cycle again
+              sleep 10
+              
+              if [ $i -eq 12 ]; then
+                echo "❌ TIMEOUT: Pod environments failed to stabilize within 2 minutes."
+                kubectl get pods -n "${NAMESPACE}"
+                exit 1
+              fi
+            done
+            set -e # Restore safe execution parameters
+            # ====================================================================
             
             # Open below Links to open WEB APP and Grafana Dashboard
             echo "===================================================================="
