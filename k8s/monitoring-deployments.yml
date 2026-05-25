@@ -4,9 +4,11 @@ metadata:
   name: prometheus
   namespace: skillpulse
 spec:
+  type: NodePort
   ports:
     - port: 9090
       targetPort: 9090
+      nodePort: 32000
   selector:
     app: prometheus
 
@@ -37,11 +39,18 @@ spec:
             - containerPort: 9090
           volumeMounts:
             - name: config-volume
-              mountPath: /etc/prometheus
+              mountPath: /etc/prometheus/prometheus.yml
+              subPath: prometheus.yml
+            - name: alerts-volume
+              mountPath: /etc/prometheus/alert-rules.yml
+              subPath: alert-rules.yml
       volumes:
         - name: config-volume
           configMap:
             name: prometheus-config
+        - name: alerts-volume
+          configMap:
+            name: alert-rules
 
 ---
 
@@ -74,7 +83,7 @@ spec:
     spec:
       containers:
         - name: loki
-          image: grafana/loki:2.8.2
+          image: grafana/loki:3.0.0
           args:
             - "-config.file=/etc/loki/loki-config.yml"
           ports:
@@ -112,6 +121,8 @@ spec:
             - name: host-logs
               mountPath: /var/log/pods
               readOnly: true
+            - name: positions
+              mountPath: /tmp
       volumes:
         - name: config-volume
           configMap:
@@ -119,6 +130,8 @@ spec:
         - name: host-logs
           hostPath:
             path: /var/log/pods
+        - name: positions
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
@@ -153,12 +166,22 @@ spec:
     metadata:
       labels:
         app: otel-collector
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "8889"
     spec:
       containers:
         - name: otel-collector
           image: otel/opentelemetry-collector-contrib:0.80.0
           args:
             - "--config=/etc/otel-collector/otel-collector-config.yml"
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: skillpulse-db
+                  key: MYSQL_ROOT_PASSWORD
           ports:
             - containerPort: 4317
             - containerPort: 4318
@@ -169,7 +192,7 @@ spec:
       volumes:
         - name: config-volume
           configMap:
-            name: otel-config
+            name: otel-collector-config
 ---
 apiVersion: v1
 kind: Service
@@ -177,10 +200,11 @@ metadata:
   name: grafana
   namespace: skillpulse
 spec:
-  type: ClusterIP
+  type: NodePort
   ports:
     - port: 3000
       targetPort: 3000
+      nodePort: 31000
   selector:
     app: grafana
 ---
@@ -221,3 +245,140 @@ spec:
         - name: dashboards-volume
           configMap:
             name: grafana-dashboards
+
+---
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-exporter
+  namespace: skillpulse
+spec:
+  selector:
+    matchLabels:
+      app: node-exporter
+  template:
+    metadata:
+      labels:
+        app: node-exporter
+      # Automated Prometheus Discovery Signposts
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "9100"
+    spec:
+      hostNetwork: true
+      hostPID: true
+      containers:
+      - name: node-exporter
+        image: quay.io/prometheus/node-exporter:v1.7.0
+        ports:
+        - containerPort: 9100
+          hostPort: 9100
+          name: scrape
+        resources:
+          limits:
+            memory: 50Mi
+            cpu: 100m
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: proc
+          mountPath: /host/proc
+          readOnly: true
+        - name: sys
+          mountPath: /host/sys
+          readOnly: true
+        - name: root
+          mountPath: /rootfs
+          readOnly: true
+      volumes:
+      - name: proc
+        hostPath:
+          path: /proc
+      - name: sys
+        hostPath:
+          path: /sys
+      - name: root
+        hostPath:
+          path: /
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kube-state-metrics
+  namespace: skillpulse
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kube-state-metrics
+rules:
+- apiGroups: [""]
+  resources: ["configmaps", "secrets", "nodes", "pods", "services", "resourcequotas", "replicationcontrollers", "limitranges", "persistentvolumeclaims", "persistentvolumes", "namespaces", "endpoints"]
+  verbs: ["list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["statefulsets", "daemonsets", "deployments", "replicasets"]
+  verbs: ["list", "watch"]
+- apiGroups: ["batch"]
+  resources: ["cronjobs", "jobs"]
+  verbs: ["list", "watch"]
+- apiGroups: ["autoscaling"]
+  resources: ["horizontalpodautoscalers"]
+  verbs: ["list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kube-state-metrics
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kube-state-metrics
+subjects:
+- kind: ServiceAccount
+  name: kube-state-metrics
+  namespace: skillpulse
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kube-state-metrics
+  namespace: skillpulse
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kube-state-metrics
+  template:
+    metadata:
+      labels:
+        app: kube-state-metrics
+      # Automated Prometheus Discovery Signposts
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "8080"
+    spec:
+      serviceAccountName: kube-state-metrics
+      containers:
+      - name: kube-state-metrics
+        image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.10.0
+        ports:
+        - containerPort: 8080
+          name: http-metrics
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kube-state-metrics
+  namespace: skillpulse
+spec:
+  ports:
+  - port: 8080
+    targetPort: 8080
+    name: http-metrics
+  selector:
+    app: kube-state-metrics

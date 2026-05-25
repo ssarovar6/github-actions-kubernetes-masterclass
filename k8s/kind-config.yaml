@@ -8,8 +8,11 @@ nodes:
       - containerPort: 30080
         hostPort: 8888
         protocol: TCP
-      - containerPort: 3000
+      - containerPort: 31000
         hostPort: 3000
+        protocol: TCP
+      - containerPort: 32000
+        hostPort: 9090
         protocol: TCP
   - role: worker
     image: kindest/node:v1.35.1

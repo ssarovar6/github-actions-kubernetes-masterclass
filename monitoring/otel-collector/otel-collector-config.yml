@@ -6,9 +6,10 @@ receivers:
       http:
         endpoint: "0.0.0.0:4318"
   mysql:
-    endpoint: "mysql.skillpulse.svc.cluster.local:3306" 
+    endpoint: "mysql:3306" 
     username: "root"
-    password: "rootpassword123" 
+    password: "${MYSQL_ROOT_PASSWORD}"
+    collection_interval: 10s 
 
 processors:
   batch:
@@ -16,16 +17,16 @@ processors:
 exporters:
   prometheus:
     endpoint: "0.0.0.0:8889"
-  logging:
-    verbosity: normal
+  debug:
+    verbosity: detailed
 
 service:
   pipelines:
     metrics:
       receivers: [otlp, mysql]
       processors: [batch]
-      exporters: [prometheus, logging]
+      exporters: [prometheus, debug]
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [logging]
+      exporters: [debug]
