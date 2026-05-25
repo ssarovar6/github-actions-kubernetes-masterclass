@@ -28,14 +28,6 @@ groups:
               summary: "High Memory usage on pod {{ $labels.pod }}"
               description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is using more than 85% of its allocated memory limit. Current value: {{ $value | printf \"%.2f\" }}%"
 
-          - alert: ContainerMissing
-            expr: absent(container_last_seen{container!=""}) == 1
-            for: 1m
-            labels:
-              severity: critical
-            annotations:
-              summary: "Container tracking has been lost"
-              description: "Prometheus has not seen any active containers reporting metrics for over 1 minute."
 
           - alert: ScrapeTargetDown
             expr: up == 0
