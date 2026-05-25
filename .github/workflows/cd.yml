@@ -111,6 +111,10 @@ jobs:
             kubectl rollout status statefulset/mysql    -n "${NAMESPACE}" --timeout=180s
             kubectl rollout status deployment/backend   -n "${NAMESPACE}" --timeout=120s
             kubectl rollout status deployment/frontend  -n "${NAMESPACE}" --timeout=60s
+
+            kubectl rollout restart deployment prometheus -n skillpulse
+            kubectl rollout restart deployment otel-collector -n skillpulse
+            kubectl rollout restart daemonset promtail -n skillpulse
             
             # Open below Links to open WEB APP and Grafana Dashboard
             echo "===================================================================="
