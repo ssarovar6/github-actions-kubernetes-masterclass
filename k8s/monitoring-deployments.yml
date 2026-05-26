@@ -137,11 +137,12 @@ spec:
             name: loki-config
 ---
 apiVersion: apps/v1
-kind: DaemonSet
+kind: Deployment
 metadata:
   name: promtail
   namespace: skillpulse
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app: promtail
@@ -289,11 +290,12 @@ spec:
 ---
 
 apiVersion: apps/v1
-kind: DaemonSet
+kind: Deployment
 metadata:
   name: node-exporter
   namespace: skillpulse
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app: node-exporter
