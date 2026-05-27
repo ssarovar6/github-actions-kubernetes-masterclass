@@ -277,25 +277,25 @@ Grafana Visualizes Metrics & Logs
 
 ## SkillPulse Application
 
-![SkillPulse UI](./screenshots/application-dashboard.png)
+![alt text](<Screenshot 2026-05-26 211125.png>)
 
 ---
 
 ## Grafana Dashboard
 
-![Grafana Dashboard](./screenshots/grafana-dashboard.png)
+![alt text](<Screenshot 2026-05-26 211008.png>)
 
 ---
 
 ## Prometheus Targets
 
-![Prometheus Targets](./screenshots/prometheus-targets.png)
+![alt text](<Screenshot 2026-05-26 211040.png>)
 
 ---
 
 ## Prometheus Alerts
 
-![Prometheus Alerts](./screenshots/prometheus-alerts.png)
+![alt text](<Screenshot 2026-05-26 211110.png>)
 
 ---
 
