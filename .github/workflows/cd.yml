@@ -24,7 +24,7 @@ jobs:
         id: tf
         run: |
           echo "host=$(terraform output -raw public_ip)" >> $GITHUB_OUTPUT
-      - name: Deploy
+          
       - uses: appleboy/ssh-action@v1
         with:
           host: ${{ steps.tf.outputs.host }}
