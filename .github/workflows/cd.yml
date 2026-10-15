@@ -17,13 +17,19 @@ env:
 
 jobs:
   deploy:
-    if: ${{ vars.DEPLOY_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     steps:
+
       - name: Get EC2 IP
         id: tf
         run: |
           echo "host=$(terraform output -raw public_ip)" >> $GITHUB_OUTPUT
+
+      - name: Debug Terraform
+        run: |
+          terraform output
+          terraform output -raw public_ip
+          echo "Host = '${{ steps.tf.outputs.host }}'"
           
       - uses: appleboy/ssh-action@v1
         with:
