@@ -13,16 +13,21 @@ env:
   DB_USER: ${{ secrets.DB_USER }}
   DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
   DB_NAME: ${{ secrets.DB_NAME }}
-  EC2_HOST: ${{ secrets.EC2_HOST }}
+  # EC2_HOST: ${{ secrets.EC2_HOST }}
 
 jobs:
   deploy:
     if: ${{ vars.DEPLOY_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     steps:
+      - name: Get EC2 IP
+        id: tf
+        run: |
+          echo "host=$(terraform output -raw public_ip)" >> $GITHUB_OUTPUT
+      - name: Deploy
       - uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.EC2_HOST }}
+          host: ${{ steps.tf.outputs.host }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           envs: CLUSTER,NAMESPACE,DOCKERHUB_USERNAME,MYSQL_ROOT_PASSWORD,DB_PASSWORD,DB_HOST,DB_PORT,DB_USER,DB_NAME
