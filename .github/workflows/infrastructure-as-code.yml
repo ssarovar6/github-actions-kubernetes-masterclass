@@ -8,7 +8,7 @@ env:
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   AWS_DEFAULT_REGION: "ap-southeast-2" 
   BUCKET_NAME: "sudhabucket-sa"
-  TABLE_NAME: "sudhabucket-sa"
+  TABLE_NAME: "sudhatable-sa"
 
 jobs:
   terraform:
