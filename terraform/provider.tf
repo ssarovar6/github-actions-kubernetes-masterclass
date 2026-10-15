@@ -28,8 +28,8 @@ terraform {
     }
 
     backend "s3" {
-      bucket = "skillpulse-bucket-state"
-      dynamodb_table = "skillpulse-table-state"
+      bucket = "sudhabucket-sa"
+      dynamodb_table = "sudhatable-sa"
       key = "terraform.tfstate"
       region = "ap-southeast-2"
     }
