@@ -4,6 +4,9 @@ on:
 
   
 jobs:
+  Infra:
+    uses: ./.github/workflows/infrastructure-as-code.yml
+    secrets: inherit
   code-scan:
     uses: ./.github/workflows/code-scan.yml
   secret-scan:
