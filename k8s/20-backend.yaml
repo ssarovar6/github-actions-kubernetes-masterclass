@@ -32,7 +32,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: ssarovar6/skillpulse-backend:53baea15aa122cd1005c279b6fce811e5f33424d
+          image: ssarovar6/skillpulse-backend:b3678924a2c430dfd4486eec81a5345fbbd5c584
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
