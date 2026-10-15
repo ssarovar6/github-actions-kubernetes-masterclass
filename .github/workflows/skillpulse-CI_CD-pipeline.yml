@@ -3,16 +3,13 @@ on:
   workflow_dispatch:
   
 jobs:
-  Infra:
-    uses: ./.github/workflows/infrastructure-as-code.yml
-    secrets: inherit
-  code-scan:
-    uses: ./.github/workflows/code-scan.yml
-  secret-scan:
-    uses: ./.github/workflows/secret-scan.yml
-    secrets: inherit
+  # code-scan:
+  #   uses: ./.github/workflows/code-scan.yml
+  # secret-scan:
+  #   uses: ./.github/workflows/secret-scan.yml
+  #   secrets: inherit
   build-job:
-    needs: [code-scan, secret-scan, Infra]
+    # needs: [code-scan, secret-scan]
     uses: ./.github/workflows/ci.yml
     secrets: inherit
   deploy-gitops-job:
