@@ -1,6 +1,6 @@
 locals {
 
-  region          = "eu-west-1"
+  region          = "ap-southeast-2"
   name            = "tws-eks-cluster"
   vpc_cidr        = "10.0.0.0/16"
   azs             = ["eu-west-1a", "eu-west-1b"]
@@ -31,7 +31,7 @@ terraform {
       bucket = "skillpulse-bucket-state"
       dynamodb_table = "skillpulse-table-state"
       key = "terraform.tfstate"
-      region = "eu-west-1"
+      region = "ap-southeast-2"
     }
 }
 
