@@ -12,7 +12,7 @@ jobs:
     uses: ./.github/workflows/secret-scan.yml
     secrets: inherit
   build-job:
-    needs: [code-scan, secret-scan]
+    needs: [code-scan, secret-scan, Infra]
     uses: ./.github/workflows/ci.yml
     secrets: inherit
   deploy-gitops-job:
