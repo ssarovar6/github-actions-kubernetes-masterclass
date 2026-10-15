@@ -1,6 +1,6 @@
 variable "aws_region" {
   description = "AWS region where resources will be provisioned"
-  default     = "eu-west-1"
+  default     = "ap-southeast-2"
 }
 
 variable "ami_id" {
